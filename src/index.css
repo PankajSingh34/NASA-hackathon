@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gradient-to-br from-space-dark via-space-navy to-space-blue text-white min-h-screen;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl;
+  }
+  
+  .btn-primary {
+    @apply bg-gradient-to-r from-space-accent to-space-accent2 text-white px-6 py-3 rounded-full font-semibold transition-all duration-300 hover:shadow-lg hover:shadow-space-accent/30 hover:-translate-y-0.5;
+  }
+  
+  .btn-secondary {
+    @apply bg-white/10 border border-white/30 text-white px-6 py-3 rounded-full font-semibold transition-all duration-300 hover:bg-white/20 hover:-translate-y-0.5;
+  }
+  
+  .research-card {
+    @apply glass-card p-6 cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-space-accent/20;
+  }
+  
+  .filter-btn {
+    @apply px-4 py-2 border border-white/30 bg-white/10 text-white rounded-full text-sm transition-all duration-300 hover:bg-gradient-to-r hover:from-space-accent hover:to-space-accent2 hover:border-space-accent hover:-translate-y-0.5 hover:shadow-md hover:shadow-space-accent/30;
+  }
+  
+  .filter-btn-active {
+    @apply bg-gradient-to-r from-space-accent to-space-accent2 border-space-accent shadow-md shadow-space-accent/30;
+  }
+  
+  .tab-button {
+    @apply px-6 py-4 cursor-pointer border-b-3 border-transparent transition-all duration-300 font-medium hover:text-space-accent hover:border-space-accent;
+  }
+  
+  .tab-button-active {
+    @apply text-space-accent border-space-accent;
+  }
+}
