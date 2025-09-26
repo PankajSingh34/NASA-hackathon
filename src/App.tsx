@@ -13,9 +13,11 @@ import KnowledgeGraph from './components/KnowledgeGraph'
 import { researchAreas } from './data/researchAreas'
 import AdvancedConsole from './components/AdvancedConsole'
 import SimulationDeck from './components/SimulationDeck'
+import IntroOverlay from './components/IntroOverlay'
 
 function App() {
   const [currentView, setCurrentView] = useState<'dashboard' | 'planets' | 'lab' | 'survival' | 'analytics' | 'mission' | 'data' | 'advanced' | 'simulation'>('lab')
+  const [showIntro, setShowIntro] = useState(false)
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-blue-900 to-black relative overflow-hidden">
@@ -27,9 +29,12 @@ function App() {
           <div className="flex items-center justify-between">
             {/* Logo/Title */}
             <div className="flex items-center">
-              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                🚀 NASA Space Biology Engine
-              </h1>
+              <button onClick={() => setShowIntro(true)} className="text-left group">
+                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent group-hover:from-cyan-300 group-hover:to-violet-400 transition-colors">
+                  🚀 NASA Space Biology Engine
+                </h1>
+                <span className="block text-[10px] tracking-wider text-cyan-300/60 group-hover:text-cyan-200 mt-0.5">Click for Mission Context</span>
+              </button>
             </div>
             
             {/* Navigation Menu */}
@@ -181,6 +186,7 @@ function App() {
       
       {/* Lab System Status Monitor */}
       <LabTester />
+      {showIntro && <IntroOverlay onClose={() => setShowIntro(false)} />}
     </div>
   )
 }export default App
