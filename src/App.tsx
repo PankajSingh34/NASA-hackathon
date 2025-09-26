@@ -14,10 +14,26 @@ import { researchAreas } from './data/researchAreas'
 import AdvancedConsole from './components/AdvancedConsole'
 import SimulationDeck from './components/SimulationDeck'
 import IntroOverlay from './components/IntroOverlay'
+import ProjectAbout from './components/ProjectAbout'
 
 function App() {
-  const [currentView, setCurrentView] = useState<'dashboard' | 'planets' | 'lab' | 'survival' | 'analytics' | 'mission' | 'data' | 'advanced' | 'simulation'>('lab')
+  const [currentView, setCurrentView] = useState<'dashboard' | 'planets' | 'lab' | 'survival' | 'analytics' | 'mission' | 'data' | 'advanced' | 'simulation' | 'about'>('lab')
   const [showIntro, setShowIntro] = useState(false)
+  const [showTitleInfo, setShowTitleInfo] = useState(false)
+  const [hoverTimeout, setHoverTimeout] = useState<number | null>(null)
+
+  const openTitleInfo = () => {
+    if (hoverTimeout) {
+      clearTimeout(hoverTimeout)
+      setHoverTimeout(null)
+    }
+    setShowTitleInfo(true)
+  }
+  const scheduleCloseTitleInfo = () => {
+    if (hoverTimeout) clearTimeout(hoverTimeout)
+    const t = window.setTimeout(() => setShowTitleInfo(false), 180)
+    setHoverTimeout(t)
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-blue-900 to-black relative overflow-hidden">
@@ -28,13 +44,58 @@ function App() {
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             {/* Logo/Title */}
-            <div className="flex items-center">
-              <button onClick={() => setShowIntro(true)} className="text-left group">
+            <div className="flex items-center relative">
+              <button
+                type="button"
+                onClick={() => { console.log('Logo clicked -> opening intro + about view'); setShowIntro(true); setCurrentView('about'); }}
+                onMouseEnter={openTitleInfo}
+                onMouseLeave={scheduleCloseTitleInfo}
+                onFocus={openTitleInfo}
+                onBlur={scheduleCloseTitleInfo}
+                className="text-left group cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-400/60 rounded"
+                aria-label="Open mission context and about page"
+              >
                 <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent group-hover:from-cyan-300 group-hover:to-violet-400 transition-colors">
                   🚀 NASA Space Biology Engine
                 </h1>
                 <span className="block text-[10px] tracking-wider text-cyan-300/60 group-hover:text-cyan-200 mt-0.5">Click for Mission Context</span>
               </button>
+              {showTitleInfo && (
+                <div
+                  onMouseEnter={openTitleInfo}
+                  onMouseLeave={scheduleCloseTitleInfo}
+                  className="absolute left-0 top-full mt-2 w-[420px] max-w-[80vw] z-50"
+                >
+                  <div className="rounded-xl border border-cyan-400/20 bg-gradient-to-br from-gray-900/95 via-slate-900/90 to-black/90 shadow-xl ring-1 ring-cyan-500/20 p-4 backdrop-blur-md animate-fadeIn">
+                    <div className="flex items-start gap-3">
+                      <div className="text-2xl">🧬</div>
+                      <div className="space-y-2">
+                        <p className="text-[13px] leading-relaxed text-gray-200">
+                          Interactive platform fusing NASA space biology research with real-time physiology & ecosystem simulations. Explore mission scenarios, system adaptation, and knowledge architecture.
+                        </p>
+                        <ul className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] text-cyan-200/80 font-medium">
+                          <li>Physiology engine</li>
+                          <li>Ecosystem dynamics</li>
+                          <li>Scenario presets</li>
+                          <li>Integrity ledger</li>
+                          <li>AI insight scaffolds</li>
+                          <li>Knowledge graph</li>
+                        </ul>
+                        <div className="flex items-center gap-2 pt-1">
+                          <button
+                            onClick={() => { setCurrentView('about'); setShowIntro(true); }}
+                            className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-cyan-600/40 hover:bg-cyan-600/60 text-cyan-50 border border-cyan-400/40 transition-colors"
+                          >Full Overview →</button>
+                          <button
+                            onClick={() => { setShowTitleInfo(false) }}
+                            className="px-2 py-1 rounded-md text-[10px] bg-white/10 hover:bg-white/20 text-gray-300 border border-white/15"
+                          >Close</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
             
             {/* Navigation Menu */}
@@ -129,6 +190,16 @@ function App() {
               >
                 🧪 Simulation Deck
               </button>
+              <button
+                onClick={() => { setCurrentView('about'); setShowIntro(true); }}
+                className={`px-3 py-2 rounded-full transition-all duration-300 border border-white/20 text-sm whitespace-nowrap ${
+                  currentView === 'about' 
+                    ? 'bg-fuchsia-600 text-white shadow-lg' 
+                    : 'bg-black/50 backdrop-blur-md text-gray-300 hover:text-white'
+                }`}
+              >
+                📘 About
+              </button>
             </div>
           </div>
         </div>
@@ -180,6 +251,11 @@ function App() {
       {currentView === 'simulation' && (
         <div className="max-w-7xl mx-auto px-4 pb-24">
           <SimulationDeck />
+        </div>
+      )}
+      {currentView === 'about' && (
+        <div className="max-w-7xl mx-auto px-4 pb-24">
+          <ProjectAbout />
         </div>
       )}
       </div>

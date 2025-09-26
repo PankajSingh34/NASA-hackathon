@@ -245,3 +245,115 @@ export interface NewsItem {
   severity: 'info' | 'warning' | 'alert' | 'critical';
   relatedIds?: string[];
 }
+
+// --- Publication Summaries & Knowledge Graph Extensions ---
+export interface PublicationSummaryProvenance {
+  publicationId: string;
+  generatedAt: string; // ISO timestamp
+  algorithmVersion: string;
+  reproducibilitySeed: string;
+  integrityHash?: string;
+}
+
+export interface PublicationSummary {
+  id: string;
+  publicationId: string;
+  keyFindings: string[];
+  methods: string[];
+  organisms: string[];
+  missionsReferenced: string[];
+  riskFactors: string[];
+  keywords: string[];
+  provenance: PublicationSummaryProvenance;
+}
+
+export interface GraphEdgeConfidence {
+  weight: number; // 0-1 normalized association strength
+  evidenceCount: number;
+  tier: 'low' | 'medium' | 'high';
+}
+
+export interface EntityRelation {
+  id: string;
+  a: string; // node id
+  b: string; // node id
+  relationType: string; // e.g. "co-occurs", "influences", "studied_in"
+  confidence: GraphEdgeConfidence;
+  provenanceRef?: string; // summary / dataset / run id
+}
+
+// --- Countermeasures & Predictive Modeling ---
+export interface Countermeasure {
+  id: string;
+  name: string;
+  category: 'exercise' | 'pharmaceutical' | 'nutrition' | 'behavioral' | 'radiation';
+  description: string;
+  efficacyTargets: Partial<Record<keyof HumanState, number>>; // fractional improvement factors
+  evidenceLevel: 'emerging' | 'moderate' | 'strong';
+  sideEffects?: string[];
+  dosingGuidelines?: string;
+  references?: string[]; // DOIs or internal ids
+}
+
+export interface InterventionScheduleEntry {
+  day: number; // day index in simulation
+  countermeasureId: string;
+  dose?: string;
+}
+
+export interface InterventionPlan {
+  id: string;
+  schedule: InterventionScheduleEntry[];
+  createdAt: string;
+  label?: string;
+}
+
+export interface ProjectionResult {
+  trajectory: HumanState[];
+  insights: ExtendedAIInsight[];
+  appliedPlan?: InterventionPlan;
+  baselineComparison?: {
+    metricDeltas: Record<string, number>; // final - baseline end value improvements
+  };
+}
+
+// --- Life Support & Resource Systems ---
+export interface LifeSupportModule {
+  id: string;
+  name: string;
+  type: 'algae-bioreactor' | 'hydroponics' | 'water-recycler' | 'air-scrubber' | 'waste-processor' | 'fungal-reactor' | 'solar-array';
+  oxygenGenRate?: number; // O2 units / hour
+  waterRecycleRate?: number; // liters / hour
+  co2ScrubRate?: number; // CO2 units / hour
+  biomassOutputRate?: number; // edible biomass units / hour
+  energyOutput?: number; // kWh / hour
+  maintenanceLoad?: number; // crew time fraction / hour
+  efficiency?: number; // 0-1
+}
+
+export interface ResourceState {
+  timestamp: string;
+  tick: number; // hours since start
+  oxygen: number; // units
+  carbonDioxide: number; // units
+  water: number; // liters
+  biomass: number; // edible mass units
+  energy: number; // kWh stored
+  waste: number; // units pending processing
+  warnings?: ResourceWarning[];
+}
+
+export interface ResourceWarning {
+  id: string;
+  type: 'oxygen-low' | 'water-low' | 'energy-low' | 'co2-high' | 'waste-high';
+  severity: 'info' | 'warning' | 'critical';
+  message: string;
+  atTick: number;
+}
+
+export interface LifeSupportStepResult {
+  state: ResourceState;
+  sustainabilityIndex: number; // heuristic 0-1
+  warningFlags: string[];
+  moduleMetrics: Record<string, number>; // aggregated contributions
+}
