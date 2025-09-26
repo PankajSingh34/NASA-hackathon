@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NASA Space Biology Knowledge Engine</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="stars" id="stars"></div>
+    
+    <div class="container">
+        <header>
+            <div class="nasa-logo">🚀 NASA</div>
+            <h1>Space Biology Knowledge Engine</h1>
+            <p class="subtitle">Exploring 1,473+ Publications • Multi-Omics Integration • Advanced Bio-manufacturing • Mission Planning Support</p>
+        </header>
+
+        <div class="dashboard">
+            <div class="control-panel">
+                <div class="search-section">
+                    <input type="text" class="search-box" placeholder="Search publications, experiments, organisms..." id="searchBox">
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" onclick="performSearch()">
+                            <span id="searchLoader" style="display: none;" class="loading"></span>
+                            Search
+                        </button>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <div class="filter-title">Research Focus</div>
+                    <div class="filter-options">
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="human-biology">Human Biology</button>
+                        <button class="filter-btn" data-filter="plant-biology">Plant Biology</button>
+                        <button class="filter-btn" data-filter="microbiology">Microbiology</button>
+                        <button class="filter-btn" data-filter="molecular-biology">Omics Studies</button>
+                        <button class="filter-btn" data-filter="radiation-biology">Radiation Biology</button>
+                        <button class="filter-btn" data-filter="life-support">Life Support</button>
+                        <button class="filter-btn" data-filter="bio-manufacturing">Bio-manufacturing</button>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <div class="filter-title">Mission Relevance</div>
+                    <div class="filter-options">
+                        <button class="filter-btn" data-filter="iss">ISS</button>
+                        <button class="filter-btn" data-filter="moon">Lunar</button>
+                        <button class="filter-btn" data-filter="mars">Mars</button>
+                        <button class="filter-btn" data-filter="deep-space">Deep Space</button>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <div class="filter-title">Publication Year</div>
+                    <div class="filter-options">
+                        <button class="filter-btn" data-filter="2020-2024">2020-2024</button>
+                        <button class="filter-btn" data-filter="2015-2019">2015-2019</button>
+                        <button class="filter-btn" data-filter="2010-2014">2010-2014</button>
+                        <button class="filter-btn" data-filter="older">Before 2010</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <div class="tabs">
+                    <div class="tab active" onclick="showTab('overview')">Overview</div>
+                    <div class="tab" onclick="showTab('research')">Research</div>
+                    <div class="tab" onclick="showTab('insights')">AI Insights</div>
+                    <div class="tab" onclick="showTab('knowledge-graph')">Knowledge Graph</div>
+                </div>
+
+                <div class="tab-content active" id="overview">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number">1,473</div>
+                            <div class="stat-label">Publications</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">12</div>
+                            <div class="stat-label">Major Research Areas</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">284</div>
+                            <div class="stat-label">Active Experiments</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">47</div>
+                            <div class="stat-label">Mission Applications</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">8</div>
+                            <div class="stat-label">Data Repositories</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">156</div>
+                            <div class="stat-label">Research Institutions</div>
+                        </div>
+                    </div>
+
+                    <div class="ai-insights">
+                        <div class="insight-title">
+                            <span class="ai-icon"></span>
+                            Latest AI Analysis
+                        </div>
+                        <p>Recent analysis reveals significant advances in understanding microgravity effects on cellular metabolism, with 89% of studies showing consistent patterns in protein expression changes. Key findings suggest new countermeasure strategies for long-duration missions.</p>
+                        <br>
+                        <p><strong>Research Gaps Identified:</strong> Limited studies on reproductive biology in space environments and long-term psychological adaptation mechanisms.</p>
+                    </div>
+
+                    <div class="research-card" onclick="showResearchDetails('plant-microgravity', event)">
+                        <div class="research-title">Microgravity Effects on Plant Growth & Physiology</div>
+                        <div class="research-meta">
+                            <span>📊 127 Publications</span>
+                            <span>🗓️ 2015-2025</span>
+                            <span>🎯 High Priority</span>
+                        </div>
+                        <div class="research-summary">
+                            Comprehensive studies on root orientation, stem elongation, photosynthesis, and nutrient uptake in microgravity. Research includes gene expression changes, cell wall modifications, and hormonal regulation mechanisms.
+                        </div>
+                        <div class="tags">
+                            <span class="tag">Plant Biology</span>
+                            <span class="tag">Frontiers</span>
+                            <span class="tag">PubMed Central</span>
+                        </div>
+                    </div>
+
+                    <div class="research-card" onclick="showResearchDetails('microbial-behavior', event)">
+                        <div class="research-title">Microbial Behavior & Virulence in Space</div>
+                        <div class="research-meta">
+                            <span>📊 156 Publications</span>
+                            <span>🗓️ 2018-2025</span>
+                            <span>🎯 Critical Priority</span>
+                        </div>
+                        <div class="research-summary">
+                            Investigation of microbial response to space stressors including mutation rates, antibiotic resistance development, and biofilm formation. Studies conducted aboard ISS and ground-based analogs.
+                        </div>
+                        <div class="tags">
+                            <span class="tag">Microbiology</span>
+                            <span class="tag">NASA Taskbook</span>
+                            <span class="tag">Astrobiology</span>
+                        </div>
+                    </div>
+
+                    <div class="research-card" onclick="showResearchDetails('omics-integration', event)">
+                        <div class="research-title">Omics Studies: Multi-level Molecular Analysis</div>
+                        <div class="research-meta">
+                            <span>📊 203 Publications</span>
+                            <span>🗓️ 2020-2025</span>
+                            <span>🎯 Critical Priority</span>
+                        </div>
+                        <div class="research-summary">
+                            Integration of transcriptomics, proteomics, genomics, and metabolomics data to understand molecular-level changes in space conditions. Comprehensive analysis of genes, proteins, and metabolites.
+                        </div>
+                        <div class="tags">
+                            <span class="tag">Molecular Biology</span>
+                            <span class="tag">GeneLab</span>
+                            <span class="tag">Systems Biology</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="research">
+                    <div id="research-results">
+                        <div class="research-card" onclick="showResearchDetails('plant-microgravity', event)">
+                            <div class="research-title">Microgravity Effects on Plant Growth & Physiology</div>
+                            <div class="research-meta">
+                                <span>📊 127 Publications</span>
+                                <span>🗓️ Frontiers, PubMed Central</span>
+                                <span>⭐ Impact: High</span>
+                            </div>
+                            <div class="research-summary">
+                                Comprehensive studies on root orientation, stem elongation, photosynthesis, and nutrient uptake in microgravity. Research includes gene expression changes, cell wall modifications, and hormonal regulation mechanisms.
+                            </div>
+                            <div class="tags">
+                                <span class="tag">Plant Biology</span>
+                                <span class="tag">Gene Expression</span>
+                                <span class="tag">Space Agriculture</span>
+                            </div>
+                        </div>
+
+                        <div class="research-card" onclick="showResearchDetails('microbial-behavior', event)">
+                            <div class="research-title">Microbial Behavior & Virulence in Space</div>
+                            <div class="research-meta">
+                                <span>📊 156 Publications</span>
+                                <span>🗓️ NASA Taskbook, Astrobiology</span>
+                                <span>⭐ Impact: Critical</span>
+                            </div>
+                            <div class="research-summary">
+                                Investigation of microbial response to space stressors including mutation rates, antibiotic resistance development, and biofilm formation. Studies conducted aboard ISS and ground-based analogs.
+                            </div>
+                            <div class="tags">
+                                <span class="tag">Microbiology</span>
+                                <span class="tag">Antibiotic Resistance</span>
+                                <span class="tag">ISS Research</span>
+                            </div>
+                        </div>
+
+                        <div class="research-card" onclick="showResearchDetails('omics-integration', event)">
+                            <div class="research-title">Omics Studies: Multi-level Molecular Analysis</div>
+                            <div class="research-meta">
+                                <span>📊 203 Publications</span>
+                                <span>🗓️ GeneLab, NASA Science Data</span>
+                                <span>⭐ Impact: Critical</span>
+                            </div>
+                            <div class="research-summary">
+                                Integration of transcriptomics, proteomics, genomics, and metabolomics data to understand molecular-level changes in space conditions. Comprehensive analysis of genes, proteins, and metabolites.
+                            </div>
+                            <div class="tags">
+                                <span class="tag">Systems Biology</span>
+                                <span class="tag">Multi-Omics</span>
+                                <span class="tag">AI Integration</span>
+                            </div>
+                        </div>
+
+                        <div class="research-card" onclick="showResearchDetails('radiation-dna-repair', event)">
+                            <div class="research-title">Radiation & DNA Damage/Repair Mechanisms</div>
+                            <div class="research-meta">
+                                <span>📊 167 Publications</span>
+                                <span>🗓️ Oxford Academic, Nature</span>
+                                <span>⭐ Impact: Critical</span>
+                            </div>
+                            <div class="research-summary">
+                                Space radiation causing DNA damage and repair mechanisms in living systems. Comparative studies between deep-space radiation vs low-Earth orbit environments and adaptive cellular responses.
+                            </div>
+                            <div class="tags">
+                                <span class="tag">Radiation Biology</span>
+                                <span class="tag">DNA Repair</span>
+                                <span class="tag">Deep Space</span>
+                            </div>
+                        </div>
+
+                        <div class="research-card" onclick="showResearchDetails('human-physiology', event)">
+                            <div class="research-title">Human Physiology, Health & Immune Response</div>
+                            <div class="research-meta">
+                                <span>📊 189 Publications</span>
+                                <span>🗓️ NASA Science, Taskbook</span>
+                                <span>⭐ Impact: Critical</span>
+                            </div>
+                            <div class="research-summary">
+                                Comprehensive analysis of bone density loss, muscle atrophy, cardiovascular changes, immune system modulation, radiation effects, stress responses, and endocrine changes in space.
+                            </div>
+                            <div class="tags">
+                                <span class="tag">Human Biology</span>
+                                <span class="tag">Immune System</span>
+                                <span class="tag">Long Duration</span>
+                            </div>
+                        </div>
+
+                        <div class="research-card" onclick="showResearchDetails('bioregenerative-systems', event)">
+                            <div class="research-title">Bioregenerative Life Support Systems</div>
+                            <div class="research-meta">
+                                <span>📊 96 Publications</span>
+                                <span>🗓️ Nature, NASA</span>
+                                <span>⭐ Impact: High</span>
+                            </div>
+                            <div class="research-summary">
+                                Engineering biological systems for life support including food production, waste recycling, oxygen generation, and synthetic biology for in-space production of nutrients and pharmaceuticals.
+                            </div>
+                            <div class="tags">
+                                <span class="tag">Life Support</span>
+                                <span class="tag">Synthetic Biology</span>
+                                <span class="tag">Sustainability</span>
+                            </div>
+                        </div>
+
+                        <div class="research-card" onclick="showResearchDetails('reproductive-biology', event)">
+                            <div class="research-title">Reproductive & Developmental Biology</div>
+                            <div class="research-meta">
+                                <span>📊 84 Publications</span>
+                                <span>🗓️ Nature, Cell Biology</span>
+                                <span>⭐ Impact: High</span>
+                            </div>
+                            <div class="research-summary">
+                                Studies on reproduction and development of organisms in space or altered gravity environments, including epigenetic changes across generations and multigenerational effects.
+                            </div>
+                            <div class="tags">
+                                <span class="tag">Developmental Biology</span>
+                                <span class="tag">Epigenetics</span>
+                                <span class="tag">Multigenerational</span>
+                            </div>
+                        </div>
+
+                        <div class="research-card" onclick="showResearchDetails('stress-metabolism', event)">
+                            <div class="research-title">Stress Response & Metabolic Shifts</div>
+                            <div class="research-meta">
+                                <span>📊 134 Publications</span>
+                                <span>🗓️ Cell Metabolism, Space Biology</span>
+                                <span>⭐ Impact: High</span>
+                            </div>
+                            <div class="research-summary">
+                                Responses to oxidative stress, metabolism changes, and cellular stress pathways under space conditions. How organisms adapt metabolically to microgravity and radiation environments.
+                            </div>
+                            <div class="tags">
+                                <span class="tag">Stress Biology</span>
+                                <span class="tag">Metabolism</span>
+                                <span class="tag">Adaptation</span>
+                            </div>
+                        </div>
+
+                        <div class="research-card" onclick="showResearchDetails('data-repositories', event)">
+                            <div class="research-title">Biospecimens & Data Repositories</div>
+                            <div class="research-meta">
+                                <span>📊 112 Publications</span>
+                                <span>🗓️ NASA, GeneLab, OSDR</span>
+                                <span>⭐ Impact: Medium</span>
+                            </div>
+                            <div class="research-summary">
+                                NASA's collection, storage, and sharing of biological specimens through repositories like OSDR, ALSDA, GeneLab. Metadata management and linking datasets to publications for maximum scientific return.
+                            </div>
+                            <div class="tags">
+                                <span class="tag">Data Management</span>
+                                <span class="tag">OSDR</span>
+                                <span class="tag">GeneLab</span>
+                            </div>
+                        </div>
+
+                        <div class="research-card" onclick="showResearchDetails('bio-manufacturing', event)">
+                            <div class="research-title">Space Bio-manufacturing & Bioprocess Engineering</div>
+                            <div class="research-meta">
+                                <span>📊 73 Publications</span>
+                                <span>🗓️ Biotechnology, Space Manufacturing</span>
+                                <span>⭐ Impact: Medium</span>
+                            </div>
+                            <div class="research-summary">
+                                Using microorganisms and biological systems to manufacture materials, nutrients, and pharmaceuticals in space. Bioprocess design under microgravity for in-space production capabilities.
+                            </div>
+                            <div class="tags">
+                                <span class="tag">Bio-manufacturing</span>
+                                <span class="tag">In-Space Production</span>
+                                <span class="tag">Microgravity Engineering</span>
+                            </div>
+                        </div>
+
+                        <div class="research-card" onclick="showResearchDetails('cardiovascular', event)">
+                            <div class="research-title">Cardiovascular Adaptation in Microgravity</div>
+                            <div class="research-meta">
+                                <span>📊 87 Publications</span>
+                                <span>🗓️ Circulation Research, Space Medicine</span>
+                                <span>⭐ Impact: High</span>
+                            </div>
+                            <div class="research-summary">
+                                Heart function and blood circulation changes in microgravity including fluid shifts, cardiac deconditioning, orthostatic intolerance, and cardiovascular countermeasure development.
+                            </div>
+                            <div class="tags">
+                                <span class="tag">Cardiovascular Health</span>
+                                <span class="tag">Fluid Dynamics</span>
+                                <span class="tag">Countermeasures</span>
+                            </div>
+                        </div>
+
+                        <div class="research-card" onclick="showResearchDetails('bone-muscle', event)">
+                            <div class="research-title">Bone & Muscle Systems in Space</div>
+                            <div class="research-meta">
+                                <span>📊 145 Publications</span>
+                                <span>🗓️ Bone Research, Muscle Biology</span>
+                                <span>⭐ Impact: High</span>
+                            </div>
+                            <div class="research-summary">
+                                Bone density loss and muscle atrophy mechanisms in microgravity. Exercise countermeasures, pharmaceutical interventions, and recovery timelines for musculoskeletal health.
+                            </div>
+                            <div class="tags">
+                                <span class="tag">Musculoskeletal</span>
+                                <span class="tag">Exercise Protocols</span>
+                                <span class="tag">Pharmaceutical Interventions</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="insights">
+                    <div class="ai-insights">
+                        <div class="insight-title">
+                            <span class="ai-icon"></span>
+                            Knowledge Synthesis
+                        </div>
+                        <p><strong>Convergent Findings:</strong></p>
+                        <ul style="margin: 15px 0; padding-left: 20px; line-height: 1.8;">
+                            <li>Omics integration reveals consistent molecular patterns across plant and human systems in microgravity</li>
+                            <li>Microbial virulence changes pose significant risks for long-duration missions requiring new antimicrobial strategies</li>
+                            <li>Radiation-induced DNA damage mechanisms show universal repair pathway activation across species</li>
+                            <li>Metabolic shifts and oxidative stress responses are fundamental adaptation mechanisms</li>
+                        </ul>
+                        
+                        <p><strong>Research Trends (2020-2025):</strong></p>
+                        <ul style="margin: 15px 0; padding-left: 20px; line-height: 1.8;">
+                            <li>Omics studies integration increased by 580% with GeneLab expansion</li>
+                            <li>Bioregenerative life support research grew 430% for Mars mission preparation</li>
+                            <li>Reproductive biology studies increased 290% focusing on multigenerational effects</li>
+                            <li>Space bio-manufacturing research expanded 380% for in-space production capabilities</li>
+                        </ul>
+                    </div>
+
+                    <div class="ai-insights">
+                        <div class="insight-title">
+                            <span class="ai-icon"></span>
+                            Mission Planning Recommendations
+                        </div>
+                        <p><strong>High Priority Countermeasures:</strong></p>
+                        <ul style="margin: 15px 0; padding-left: 20px; line-height: 1.8;">
+                            <li>Integrated omics monitoring for real-time molecular health assessment - 95% accuracy in early detection</li>
+                            <li>Bioregenerative life support systems combining plants and microbes - 85% resource recycling efficiency</li>
+                            <li>Advanced antimicrobial surfaces and treatments for microbial virulence control</li>
+                            <li>DNA repair enhancement protocols for radiation protection - 60% improvement in repair efficiency</li>
+                        </ul>
+                        
+                        <p><strong>Technology Development Priorities:</strong></p>
+                        <ul style="margin: 15px 0; padding-left: 20px; line-height: 1.8;">
+                            <li>Space bio-manufacturing systems for pharmaceutical and nutrient production</li>
+                            <li>Multi-omics integration platforms for comprehensive health monitoring</li>
+                            <li>Advanced plant growth systems with AI-controlled environmental optimization</li>
+                            <li>Biospecimen preservation and automated analysis systems for deep space missions</li>
+                            <li>Synthetic biology platforms for in-space production of essential compounds</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="knowledge-graph">
+                    <div class="knowledge-graph">
+                        <div id="threejs-container"></div>
+                        <div class="graph-controls">
+                            <button class="control-btn" onclick="resetCamera()">Reset View</button>
+                            <button class="control-btn" onclick="toggleAnimation()">Toggle Rotation</button>
+                            <button class="control-btn" onclick="changeVisualization()">Change Mode</button>
+                            <button class="control-btn" onclick="showConnections()">Show Links</button>
+                        </div>
+                        <div class="node-info" id="nodeInfo">
+                            <div class="node-title" id="nodeTitle"></div>
+                            <div class="node-description" id="nodeDescription"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="ai-insights">
+                        <div class="insight-title">
+                            <span class="ai-icon"></span>
+                            3D Network Analysis Insights
+                        </div>
+                        <p><strong>Most Connected Research Areas:</strong></p>
+                        <p>Omics Studies Integration (203 publications), Human Physiology & Health (189 publications), Radiation & DNA Repair (167 publications)</p>
+                        
+                        <p style="margin-top: 15px;"><strong>Emerging Research Clusters:</strong></p>
+                        <p>Multi-omics integration with AI analysis, Bioregenerative life support with synthetic biology, Space bio-manufacturing with microbial engineering</p>
+                        
+                        <p style="margin-top: 15px;"><strong>Data Repository Integration:</strong></p>
+                        <p>GeneLab • OSDR • ALSDA • NASA Science Data Portal • Linked metadata systems enabling cross-study analysis</p>
+                        
+                        <p style="margin-top: 15px;"><strong>3D Visualization Features:</strong></p>
+                        <p>Interactive nodes represent 12 major research areas • Connections show interdisciplinary relationships • Colors indicate research categories • Size reflects publication volume • Hover for detailed source information</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="researchModal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div id="modalContent">
+                <!-- Dynamic content will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

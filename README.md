@@ -75,6 +75,30 @@ Preview locally:
 npm run preview
 ```
 
+## Deployment (Render – Manual Static Site Method)
+
+No `render.yaml` is needed. Use the dashboard:
+
+1. Commit & push the repository so `package.json` is at repo root.
+2. In Render: New → Static Site → pick this repo.
+3. Settings:
+   - Root Directory: (leave blank)
+   - Build Command: `npm install && npm run build`
+   - Publish Directory: `dist`
+   - (Optional) Environment Variable: `NODE_VERSION=18`
+4. Create Site → wait for build to finish.
+5. Add SPA rewrite rule (Settings → Redirects/Rewrites):
+   - Source: `/*` Destination: `/index.html` Action: `Rewrite`
+6. Redeploy if you added the rewrite after the first deploy.
+
+Environment Variables (future): prefix client-exposed ones with `VITE_`, e.g.:
+
+```
+VITE_API_BASE=https://example.com/api
+```
+
+Add them in Render → Environment; rebuild to apply.
+
 ## Roadmap (Inline)
 
 - [ ] Replay timeline UI (slider + jump to snapshot)

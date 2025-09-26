@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { Rocket, Satellite, Sun, Moon, ShieldAlert, Activity, Play, Pause, TestTubes, RefreshCw, Bone, Leaf, Radiation, Newspaper, ListTree, Calculator } from 'lucide-react'
 import CryptoJS from 'crypto-js'
 
 interface SurvivalMetrics {
@@ -56,7 +57,7 @@ const SpaceSurvivalLab: React.FC = () => {
       oxygen: 20.9,
       radiation: 0.4, // mSv/day
       water: 95,
-      icon: '🛰️'
+  icon: 'sat'
     },
     {
       name: 'Mars Mission',
@@ -66,7 +67,7 @@ const SpaceSurvivalLab: React.FC = () => {
       oxygen: 16,
       radiation: 0.7,
       water: 85,
-      icon: '🔴'
+  icon: 'mars'
     },
     {
       name: 'Solar Storm',
@@ -76,7 +77,7 @@ const SpaceSurvivalLab: React.FC = () => {
       oxygen: 15,
       radiation: 5.0, // High radiation
       water: 90,
-      icon: '☀️'
+  icon: 'sun'
     },
     {
       name: 'Lunar Base',
@@ -86,7 +87,7 @@ const SpaceSurvivalLab: React.FC = () => {
       oxygen: 19,
       radiation: 1.2,
       water: 80,
-      icon: '🌙'
+  icon: 'moon'
     }
   ]
 
@@ -135,27 +136,27 @@ const SpaceSurvivalLab: React.FC = () => {
     const headlines: string[] = []
     
     if (newMetrics.astronautHealth < 70) {
-      headlines.push(`🚨 BREAKING: Astronaut health drops to ${newMetrics.astronautHealth.toFixed(1)}% in space simulation`)
+  headlines.push(`ALERT: Astronaut health drops to ${newMetrics.astronautHealth.toFixed(1)}% in space simulation`)
     }
     
     if (newMetrics.boneDensity < 85) {
-      headlines.push(`⚠️ ALERT: Bone density loss detected - down to ${newMetrics.boneDensity.toFixed(1)}% of Earth normal`)
+  headlines.push(`ALERT: Bone density loss detected - ${newMetrics.boneDensity.toFixed(1)}% of Earth baseline`)
     }
     
     if (newMetrics.radiationDamage > 30) {
-      headlines.push(`☢️ URGENT: Radiation exposure reaches critical levels at ${newMetrics.radiationDamage.toFixed(1)}%`)
+  headlines.push(`RADIATION WARNING: Exposure at ${newMetrics.radiationDamage.toFixed(1)}% threshold`)
     }
     
     if (newMetrics.plantGrowth < 60) {
-      headlines.push(`🌱 CONCERN: Hydroponic crops show ${(100 - newMetrics.plantGrowth).toFixed(1)}% growth reduction`)
+  headlines.push(`PLANT GROWTH CONCERN: ${(100 - newMetrics.plantGrowth).toFixed(1)}% reduction detected`)
     }
     
     if (newMetrics.oxygenLevel < 18) {
-      headlines.push(`💨 EMERGENCY: Oxygen levels critical at ${newMetrics.oxygenLevel.toFixed(1)}%`)
+  headlines.push(`OXYGEN CRITICAL: Atmospheric O2 at ${newMetrics.oxygenLevel.toFixed(1)}%`)
     }
 
     if (headlines.length === 0) {
-      headlines.push(`✅ ALL SYSTEMS NOMINAL: Crew and plants maintaining optimal health`)
+  headlines.push(`SYSTEMS NOMINAL: Crew + botany stable`)
     }
     
     return headlines
@@ -178,7 +179,7 @@ const SpaceSurvivalLab: React.FC = () => {
     // Check for tampering (simplified - in real app, compare with stored hash)
     if (simulationHash && simulationHash !== newHash && isRunning) {
       setTamperedAlert(true)
-      addLog(`⚠️ TAMPERING DETECTED: ${key.toUpperCase()} manually adjusted during simulation`)
+  addLog(`TAMPER DETECTED: ${key.toUpperCase()} manually adjusted during simulation`)
     }
     
     setSimulationHash(newHash)
@@ -198,7 +199,7 @@ const SpaceSurvivalLab: React.FC = () => {
       setCurrentScenario(scenarioName)
       setSimulationTime(0)
       setTamperedAlert(false)
-      addLog(`📋 Loaded preset scenario: ${scenario.name}`)
+  addLog(`Loaded preset scenario: ${scenario.name}`)
     }
   }
 
@@ -206,11 +207,11 @@ const SpaceSurvivalLab: React.FC = () => {
   const toggleSimulation = () => {
     if (isRunning) {
       setIsRunning(false)
-      addLog(`⏹️ Simulation stopped at day ${simulationTime}`)
+  addLog(`Simulation stopped at day ${simulationTime}`)
     } else {
       setIsRunning(true)
       setSimulationHash(generateHash(sliders, simulationTime))
-      addLog(`▶️ Simulation started with ${currentScenario} parameters`)
+  addLog(`Simulation started with ${currentScenario} parameters`)
     }
   }
 
@@ -220,7 +221,7 @@ const SpaceSurvivalLab: React.FC = () => {
     setIsRunning(false)
     setTamperedAlert(false)
     setNewsHeadlines([])
-    addLog(`🔄 Simulation reset`)
+  addLog(`Simulation reset`)
   }
 
   // Simulation timer effect
@@ -273,20 +274,20 @@ const SpaceSurvivalLab: React.FC = () => {
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-            🌌 Mini Space Survival Lab
+          <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent flex items-center gap-3 justify-center">
+            <Rocket className="w-10 h-10 text-blue-300"/> <span>Mini Space Survival Lab</span>
           </h1>
           <p className="text-gray-300">Interactive space survival simulator for astronauts and plants</p>
         </div>
 
         {/* Tamper Alert */}
         {tamperedAlert && (
-          <div className="bg-red-500/20 border border-red-500 rounded-lg p-4 mb-6 animate-pulse">
-            <div className="flex items-center">
-              <span className="text-red-400 text-xl mr-3">⚠️</span>
+          <div className="bg-red-500/15 border border-red-500/50 rounded-lg p-4 mb-6 animate-pulse">
+            <div className="flex items-center gap-3">
+              <ShieldAlert className="w-6 h-6 text-red-400"/>
               <div>
-                <h3 className="text-red-400 font-bold">TAMPERING DETECTED</h3>
-                <p className="text-red-300">Manual parameter adjustment detected during simulation</p>
+                <h3 className="text-red-400 font-bold tracking-wide text-sm">TAMPERING DETECTED</h3>
+                <p className="text-red-300 text-xs">Manual parameter adjustment detected during simulation</p>
               </div>
             </div>
           </div>
@@ -300,7 +301,7 @@ const SpaceSurvivalLab: React.FC = () => {
             
             {/* Preset Scenarios */}
             <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-              <h3 className="text-xl font-bold mb-4">🚀 Preset Scenarios</h3>
+              <h3 className="text-xl font-bold mb-4 flex items-center gap-2"><Rocket className="w-5 h-5"/> Preset Scenarios</h3>
               <div className="space-y-3">
                 {scenarios.map((scenario) => (
                   <button
@@ -314,7 +315,12 @@ const SpaceSurvivalLab: React.FC = () => {
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <span className="text-lg mr-2">{scenario.icon}</span>
+                        <span className="text-lg mr-2">
+                          {scenario.icon === 'sat' && <Satellite className="w-5 h-5 inline text-cyan-300"/>}
+                          {scenario.icon === 'mars' && <Rocket className="w-5 h-5 inline text-red-400"/>}
+                          {scenario.icon === 'sun' && <Sun className="w-5 h-5 inline text-amber-300"/>}
+                          {scenario.icon === 'moon' && <Moon className="w-5 h-5 inline text-slate-300"/>}
+                        </span>
                         <span className="font-semibold">{scenario.name}</span>
                       </div>
                       <span className="text-sm text-gray-400">{scenario.duration}</span>
@@ -327,7 +333,7 @@ const SpaceSurvivalLab: React.FC = () => {
 
             {/* Environmental Controls */}
             <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-              <h3 className="text-xl font-bold mb-4">🎛️ Environmental Controls</h3>
+              <h3 className="text-xl font-bold mb-4 flex items-center gap-2"><Activity className="w-5 h-5"/> Environmental Controls</h3>
               
               {/* Gravity Slider */}
               <div className="mb-6">
@@ -416,7 +422,7 @@ const SpaceSurvivalLab: React.FC = () => {
 
             {/* Simulation Controls */}
             <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-              <h3 className="text-xl font-bold mb-4">⏯️ Simulation Control</h3>
+              <h3 className="text-xl font-bold mb-4 flex items-center gap-2"><Activity className="w-5 h-5"/> Simulation Control</h3>
               <div className="space-y-4">
                 <div className="flex space-x-3">
                   <button
@@ -427,7 +433,7 @@ const SpaceSurvivalLab: React.FC = () => {
                         : 'bg-green-500 hover:bg-green-600 text-white'
                     }`}
                   >
-                    {isRunning ? '⏸️ Pause' : '▶️ Start'}
+                    {isRunning ? <span className="flex items-center gap-2 justify-center"><Pause className="w-4 h-4"/>Pause</span> : <span className="flex items-center gap-2 justify-center"><Play className="w-4 h-4"/>Start</span>}
                   </button>
                   <button
                     onClick={() => {
@@ -445,14 +451,14 @@ const SpaceSurvivalLab: React.FC = () => {
                     }}
                     className="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-semibold transition-all duration-300 mb-2"
                   >
-                    🧪 Test All Scenarios
+                    <span className="flex items-center gap-2"><TestTubes className="w-4 h-4"/>Test All</span>
                   </button>
                   
                   <button
                     onClick={resetSimulation}
                     className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-semibold transition-all duration-300"
                   >
-                    🔄 Reset
+                    <span className="flex items-center gap-2"><RefreshCw className="w-4 h-4"/>Reset</span>
                   </button>
                 </div>
                 <div className="text-center">
@@ -471,14 +477,14 @@ const SpaceSurvivalLab: React.FC = () => {
             
             {/* Health Bars */}
             <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-              <h3 className="text-xl font-bold mb-6">👨‍🚀 Survival Metrics</h3>
+              <h3 className="text-xl font-bold mb-6 flex items-center gap-2"><Activity className="w-5 h-5"/> Survival Metrics</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Astronaut Health */}
                 <div className="space-y-4">
                   <div>
                     <div className="flex justify-between mb-2">
-                      <span className="font-medium">👨‍🚀 Astronaut Health</span>
+                      <span className="font-medium flex items-center gap-1"><Activity className="w-4 h-4 text-cyan-300"/>Astronaut Health</span>
                       <span className={`font-bold ${getHealthColor(currentMetrics.astronautHealth)}`}>
                         {currentMetrics.astronautHealth.toFixed(1)}%
                       </span>
@@ -493,7 +499,7 @@ const SpaceSurvivalLab: React.FC = () => {
 
                   <div>
                     <div className="flex justify-between mb-2">
-                      <span className="font-medium">🦴 Bone Density</span>
+                      <span className="font-medium flex items-center gap-1"><Bone className="w-4 h-4 text-amber-300"/>Bone Density</span>
                       <span className={`font-bold ${getHealthColor(currentMetrics.boneDensity)}`}>
                         {currentMetrics.boneDensity.toFixed(1)}%
                       </span>
@@ -511,7 +517,7 @@ const SpaceSurvivalLab: React.FC = () => {
                 <div className="space-y-4">
                   <div>
                     <div className="flex justify-between mb-2">
-                      <span className="font-medium">🌱 Plant Growth</span>
+                      <span className="font-medium flex items-center gap-1"><Leaf className="w-4 h-4 text-emerald-300"/>Plant Growth</span>
                       <span className={`font-bold ${getHealthColor(currentMetrics.plantGrowth)}`}>
                         {currentMetrics.plantGrowth.toFixed(1)}%
                       </span>
@@ -526,7 +532,7 @@ const SpaceSurvivalLab: React.FC = () => {
 
                   <div>
                     <div className="flex justify-between mb-2">
-                      <span className="font-medium">☢️ Radiation Damage</span>
+                      <span className="font-medium flex items-center gap-1"><Radiation className="w-4 h-4 text-red-400"/>Radiation Damage</span>
                       <span className={`font-bold ${getHealthColor(100 - currentMetrics.radiationDamage)}`}>
                         {currentMetrics.radiationDamage.toFixed(1)}%
                       </span>
@@ -544,7 +550,7 @@ const SpaceSurvivalLab: React.FC = () => {
 
             {/* News Generator */}
             <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-              <h3 className="text-xl font-bold mb-4">📰 Mission News</h3>
+              <h3 className="text-xl font-bold mb-4 flex items-center gap-2"><Newspaper className="w-5 h-5"/> Mission News</h3>
               <div className="space-y-3 max-h-48 overflow-y-auto">
                 {newsHeadlines.length > 0 ? (
                   newsHeadlines.map((headline, index) => (
@@ -561,7 +567,7 @@ const SpaceSurvivalLab: React.FC = () => {
 
             {/* Event Logs */}
             <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-              <h3 className="text-xl font-bold mb-4">📋 Event Logs</h3>
+              <h3 className="text-xl font-bold mb-4 flex items-center gap-2"><ListTree className="w-5 h-5"/> Event Logs</h3>
               <div className="space-y-1 max-h-48 overflow-y-auto font-mono text-sm">
                 {logs.length > 0 ? (
                   logs.map((log, index) => (
@@ -579,7 +585,7 @@ const SpaceSurvivalLab: React.FC = () => {
 
         {/* Science Formulas Footer */}
         <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-          <h3 className="text-xl font-bold mb-4">🧮 Scientific Formulas</h3>
+          <h3 className="text-xl font-bold mb-4 flex items-center gap-2"><Calculator className="w-5 h-5"/> Scientific Formulas</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
             <div>
               <h4 className="font-semibold text-blue-400 mb-2">Bone Density Loss</h4>

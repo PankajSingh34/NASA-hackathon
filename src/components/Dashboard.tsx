@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PrimaryNav from './PrimaryNav';
 import { ResearchArea } from '../types';
 import ResearchCard from './ResearchCard';
 import Modal from './Modal';
@@ -126,27 +127,11 @@ const Dashboard: React.FC<DashboardProps> = ({ researchAreas }) => {
 
   return (
     <div className="min-h-screen relative">
-      {/* Navigation */}
-      <nav className="flex justify-center mb-8">
-        <div className="bg-white/10 backdrop-blur-md rounded-full p-2 border border-white/20">
-          {['overview', 'research', 'publications', 'missions'].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-6 py-3 rounded-full transition-all duration-300 capitalize ${
-                activeTab === tab
-                  ? 'bg-blue-500 text-white shadow-lg'
-                  : 'text-gray-300 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
-      </nav>
+      <PrimaryNav active={activeTab} onChange={setActiveTab} />
+      <div className="h-14" />
 
       {/* Content */}
-      <div className="container mx-auto px-6 pb-20">
+      <div className="container mx-auto px-4 sm:px-6 pb-20 pt-4">
         {renderTabContent()}
       </div>
 

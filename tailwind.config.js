@@ -14,6 +14,14 @@ export default {
           orange: "#ff6b35",
           orange2: "#f7931e",
         },
+        nasa: {
+          blue: "#0B3D91", // NASA Blue PMS 286 C
+          red: "#FC3D21", // NASA Red PMS 185 C
+          orange: "#FF4F00", // International Orange
+          deep: "#0a192f", // Deep Space background
+          light: "#F8F9FA", // Light gray backgrounds
+          charcoal: "#212529", // Primary text color in light contexts
+        },
       },
       animation: {
         twinkle: "twinkle 3s infinite",

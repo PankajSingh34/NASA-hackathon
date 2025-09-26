@@ -4,22 +4,30 @@
 
 @layer base {
   body {
-    @apply bg-gradient-to-br from-space-dark via-space-navy to-space-blue text-white min-h-screen;
+    /* NASA deep space gradient with brand accent overlays */
+    @apply bg-gradient-to-br from-nasa-deep via-space-navy to-space-blue text-white min-h-screen antialiased;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   }
+  h1,h2,h3,h4,h5,h6 { @apply font-semibold tracking-tight; }
+  ::selection { background: #0B3D91; color: #F8F9FA; }
 }
 
 @layer components {
+  /* Utility helpers for responsive behavior */
+  .only-mobile { @apply block md:hidden; }
+  .only-desktop { @apply hidden md:block; }
+  .truncate-ellipsis { @apply overflow-hidden text-ellipsis whitespace-nowrap; }
+
   .glass-card {
     @apply bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl;
   }
   
   .btn-primary {
-    @apply bg-gradient-to-r from-space-accent to-space-accent2 text-white px-6 py-3 rounded-full font-semibold transition-all duration-300 hover:shadow-lg hover:shadow-space-accent/30 hover:-translate-y-0.5;
+    @apply bg-gradient-to-r from-nasa-blue to-space-accent2 text-white px-6 py-3 rounded-full font-semibold transition-all duration-300 hover:shadow-lg hover:shadow-nasa-blue/30 hover:-translate-y-0.5;
   }
   
   .btn-secondary {
-    @apply bg-white/10 border border-white/30 text-white px-6 py-3 rounded-full font-semibold transition-all duration-300 hover:bg-white/20 hover:-translate-y-0.5;
+    @apply bg-white/10 border border-white/30 text-white px-6 py-3 rounded-full font-semibold transition-all duration-300 hover:bg-white/20 hover:-translate-y-0.5 hover:border-nasa-blue/40;
   }
   
   .research-card {
@@ -31,7 +39,7 @@
   }
   
   .filter-btn-active {
-    @apply bg-gradient-to-r from-space-accent to-space-accent2 border-space-accent shadow-md shadow-space-accent/30;
+    @apply bg-gradient-to-r from-nasa-blue to-nasa-red border-nasa-blue shadow-md shadow-nasa-blue/30;
   }
   
   .tab-button {
@@ -39,6 +47,22 @@
   }
   
   .tab-button-active {
-    @apply text-space-accent border-space-accent;
+    @apply text-nasa-blue border-nasa-blue;
+  }
+
+  /* Brand utility chips */
+  .chip-red { @apply inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-nasa-red/20 text-nasa-red border border-nasa-red/40; }
+  .chip-blue { @apply inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-nasa-blue/20 text-nasa-blue border border-nasa-blue/40; }
+  .chip-orange { @apply inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-nasa-orange/20 text-nasa-orange border border-nasa-orange/40; }
+
+  /* Panel styles using NASA palette */
+  .panel {
+    @apply bg-white/5 backdrop-blur-md border border-white/10 rounded-xl shadow-inner;
+  }
+  .panel-accent {
+    @apply panel border-nasa-blue/40 shadow-nasa-blue/10;
+  }
+  .panel-critical {
+    @apply panel border-nasa-red/40 shadow-nasa-red/10;
   }
 }

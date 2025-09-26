@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Leaf, FlaskConical, Activity, Sun, Droplet, Settings2, BarChart3 } from 'lucide-react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
@@ -43,6 +44,14 @@ interface ExperimentData {
   generation: number;
   history: Array<{ time: number; growth: number; survival: number; stress: number; viability: number }>;
   anomaly?: boolean;
+  // New extended physiology / resource metrics
+  water: number; // 0-1 reservoir saturation
+  nutrients: number; // 0-1 nutrient availability
+  lightExposure: number; // 0-1 relative to optimal photoperiod
+  biomass: number; // grams (simulated)
+  o2Output: number; // mg O2 per day (simulated)
+  co2Uptake: number; // mg CO2 per day
+  rootDepth: number; // 0-1 scaled
 }
 
 const BiologyLab: React.FC = () => {
@@ -55,6 +64,17 @@ const BiologyLab: React.FC = () => {
   const [autoEvolve, setAutoEvolve] = useState(true);
   const [globalEnvAdjust, setGlobalEnvAdjust] = useState({ temp: 0, radiation: 0, pressure: 1, oxygen: 1 });
   const [lastEvolutionTick, setLastEvolutionTick] = useState(0);
+  const [showAnalytics, setShowAnalytics] = useState(true);
+  // Greenhouse / habitat systems (applied to all experiments)
+  const [greenhouse, setGreenhouse] = useState({
+    photoperiodHours: 16,      // hours of active light per 24h
+    lightIntensity: 0.85,      // 0-1 PAR proxy
+    irrigationRate: 0.35,      // fraction water restored per cycle
+    irrigationInterval: 12,    // hours between irrigation pulses
+    nutrientDosing: 0.25,      // fraction nutrients restored per cycle
+    nutrientInterval: 48,      // hours between nutrient pulses
+    co2Enrichment: 1.0         // multiplier for CO2 uptake -> growth boost
+  });
   const labRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene>();
   const rendererRef = useRef<THREE.WebGLRenderer>();
@@ -266,7 +286,14 @@ const BiologyLab: React.FC = () => {
       viabilityScore,
       mutationCount: 0,
       generation: 0,
-      history: []
+      history: [],
+      water: 1,
+      nutrients: 1,
+      lightExposure: 0,
+      biomass: 0,
+      o2Output: 0,
+      co2Uptake: 0,
+      rootDepth: 0
     };
 
     setExperiments(prev => [...prev, newExperiment]);
@@ -281,9 +308,37 @@ const BiologyLab: React.FC = () => {
       setExperiments(prev => prev.map(exp => {
         if (!exp.isActive || exp.growthProgress >= 1) return exp;
         const { growthRate, survival, stressIndex, viabilityScore } = calculateGrowthFactors(exp.organism, exp.planet);
-        const progressIncrement = (growthRate * timeSpeed * 0.01) * (1 + (Math.random() - 0.5) * 0.2);
+        // Simulated circadian / photoperiod cycle (timeElapsed in days -> *24 for hours)
+        const hoursElapsed = (exp.timeElapsed + timeSpeed) * 24;
+        const lightOn = (hoursElapsed % 24) < greenhouse.photoperiodHours;
+        // Light exposure integrator (rolling toward 1 if adequate over cycle)
+        const lightFactor = lightOn ? greenhouse.lightIntensity : 0.05;
+        const targetLightExposure = lightOn ? 1 : 0; // adapt quickly to presence / absence
+        const newLightExposure = exp.lightExposure + (targetLightExposure - exp.lightExposure) * 0.15;
+
+        // Resource consumption (scaled by growthRate & light)
+        const waterUse = 0.0035 * growthRate * (0.4 + lightFactor) * timeSpeed;
+        const nutrientUse = 0.002 * growthRate * (0.5 + exp.growthProgress) * timeSpeed;
+
+        // Irrigation & nutrient dosing pulses timed by intervals
+        const hoursNext = hoursElapsed; // after increment
+        const irrigate = Math.floor(hoursNext / greenhouse.irrigationInterval) !== Math.floor((hoursNext - timeSpeed*24)/greenhouse.irrigationInterval);
+        const dose = Math.floor(hoursNext / greenhouse.nutrientInterval) !== Math.floor((hoursNext - timeSpeed*24)/greenhouse.nutrientInterval);
+
+        const newWater = Math.max(0, Math.min(1, exp.water - waterUse + (irrigate ? greenhouse.irrigationRate * (0.6 + Math.random()*0.4) : 0)));
+        const newNutrients = Math.max(0, Math.min(1, exp.nutrients - nutrientUse + (dose ? greenhouse.nutrientDosing * (0.5 + Math.random()*0.6) : 0)));
+
+        // Resource deficiencies impose penalties
+        const resourcePenalty = (newWater < 0.3 ? (0.3 - newWater) * 0.6 : 0) + (newNutrients < 0.25 ? (0.25 - newNutrients) * 0.5 : 0);
+        const effectiveGrowthRate = growthRate * (1 - resourcePenalty) * (0.7 + lightFactor * 0.5) * (0.8 + greenhouse.co2Enrichment * 0.25);
+        const progressIncrement = (effectiveGrowthRate * timeSpeed * 0.01) * (1 + (Math.random() - 0.5) * 0.15);
         const newProgress = Math.min(1, exp.growthProgress + progressIncrement);
         const newTime = exp.timeElapsed + timeSpeed;
+        const biomassIncrement = progressIncrement * 120 * (0.5 + newNutrients * 0.5) * (0.6 + newWater * 0.4);
+        const newBiomass = exp.biomass + biomassIncrement;
+        const o2 = biomassIncrement * (0.6 + lightFactor * 0.8) * 10; // pseudo value
+        const co2 = o2 * 1.2;
+        const newRootDepth = Math.min(1, exp.rootDepth + progressIncrement * (0.4 + newWater * 0.3));
         const adaptationStage = computeAdaptationStage(newProgress);
         let updated: ExperimentData = {
           ...exp,
@@ -294,7 +349,14 @@ const BiologyLab: React.FC = () => {
             stressIndex,
             viabilityScore,
             anomaly: stressIndex > 0.85 && viabilityScore < 0.3 ? true : false,
-            history: [...exp.history.slice(-299), { time: newTime, growth: newProgress, survival, stress: stressIndex, viability: viabilityScore }]
+            history: [...exp.history.slice(-299), { time: newTime, growth: newProgress, survival, stress: stressIndex, viability: viabilityScore }],
+            water: newWater,
+            nutrients: newNutrients,
+            lightExposure: newLightExposure,
+            biomass: newBiomass,
+            o2Output: exp.o2Output + o2,
+            co2Uptake: exp.co2Uptake + co2,
+            rootDepth: newRootDepth
         };
         if (advancedMode && autoEvolve && newTime - lastEvolutionTick > 50) {
           updated = attemptMutation(updated);
@@ -434,6 +496,7 @@ const BiologyLab: React.FC = () => {
           const cap = child.children.find(c => c.userData.part === 'cap');
           const leaves = child.children.filter(c => c.userData.part === 'leaf');
           const branches = child.children.filter(c => c.userData.part === 'branch');
+          const roots = child.children.filter(c => c.userData.part === 'root');
           const growth = exp.growthProgress;
           const displayed = child.userData.displayedGrowth ?? 0;
           const newDisplayed = displayed + (growth - displayed) * 0.08; // smooth interpolation
@@ -442,8 +505,20 @@ const BiologyLab: React.FC = () => {
           if (stem) stem.scale.set(1, height, 1);
           if (cap) cap.position.y = height + 0.08;
           leaves.forEach((leaf, idx) => {
-            leaf.scale.setScalar(0.28 + newDisplayed * 0.95);
-            leaf.rotation.z = Math.sin(t * 1.5 + idx) * 0.2;
+            const leafScale = 0.20 + newDisplayed * 1.1 * (0.5 + exp.nutrients * 0.5);
+            leaf.scale.setScalar(leafScale);
+            leaf.rotation.z = Math.sin(t * 1.5 + idx) * 0.18;
+            // Nutrient deficiency yellowing & water stress browning
+            if (leaf instanceof THREE.Mesh && leaf.material instanceof THREE.MeshBasicMaterial) {
+              const base = new THREE.Color(exp.organism.color);
+              const nutrientTint = new THREE.Color(0xffee55);
+              const waterTint = new THREE.Color(0x8b4513);
+              const mixed = base.clone();
+              if (exp.nutrients < 0.4) mixed.lerp(nutrientTint, (0.4 - exp.nutrients) * 0.8);
+              if (exp.water < 0.35) mixed.lerp(waterTint, (0.35 - exp.water) * 0.9);
+              leaf.material.color = mixed;
+              leaf.material.opacity = 0.55 + exp.viabilityScore * 0.4;
+            }
           });
           // Branch emergence at growth thresholds
           branches.forEach((br, idx) => {
@@ -452,6 +527,15 @@ const BiologyLab: React.FC = () => {
             const local = Math.max(0, Math.min(1, (newDisplayed - threshold) * 3));
             br.visible = active;
             if (active) br.scale.setScalar(0.2 + local * 0.9);
+          });
+          // Roots depth scaling & pulsing
+          roots.forEach((rt, idx) => {
+            const target = exp.rootDepth * (0.4 + idx * 0.3);
+            const current = rt.userData.depthDisplayed ?? 0;
+            const nd = current + (target - current) * 0.06;
+            rt.userData.depthDisplayed = nd;
+            rt.scale.set(1, nd * 2, 1);
+            rt.rotation.y = idx * (Math.PI * 0.5) + Math.sin(t * 0.2 + idx) * 0.1;
           });
           // subtle pulsation based on survival
           child.position.y = Math.sin(t * 2 + child.userData.experimentIndex) * 0.05 * exp.survivalRate;
@@ -524,6 +608,18 @@ const BiologyLab: React.FC = () => {
           br.visible = false;
           group.add(br);
         }
+        // Simple radial root system (4 roots) using thin cylinders scaling downward
+        for (let r = 0; r < 4; r++) {
+          const rootGeo = new THREE.CylinderGeometry(0.025, 0.04, 2, 6, 1, true);
+          const rootMat = new THREE.MeshStandardMaterial({ color: 0x4d3b1f, roughness: 0.9, metalness: 0.02 });
+          const root = new THREE.Mesh(rootGeo, rootMat);
+          root.position.y = 0; // pivot at soil
+          root.rotation.z = Math.PI / 2;
+          root.rotation.y = r * (Math.PI / 2);
+          root.scale.y = 0.01;
+          root.userData.part = 'root';
+          group.add(root);
+        }
         return group;
       })();
       plant.position.set((i - experiments.length/2) * 2.5, 0, 0);
@@ -567,16 +663,65 @@ const BiologyLab: React.FC = () => {
     });
   }, [experiments]);
 
+  // Aggregated lab stats for professional summary bar
+  const labStats = React.useMemo(() => {
+    if (!experiments.length) return null;
+    const totalBiomass = experiments.reduce((a,e)=>a+e.biomass,0);
+    const totalO2 = experiments.reduce((a,e)=>a+e.o2Output,0);
+    const avgViability = experiments.reduce((a,e)=>a+e.viabilityScore,0)/experiments.length;
+    const avgStress = experiments.reduce((a,e)=>a+e.stressIndex,0)/experiments.length;
+    const active = experiments.filter(e=>e.isActive).length;
+    return { totalBiomass, totalO2, avgViability, avgStress, active };
+  }, [experiments]);
+
+  const topStress = React.useMemo(()=>{
+    return [...experiments]
+      .sort((a,b)=>b.stressIndex - a.stressIndex)
+      .slice(0,3);
+  }, [experiments]);
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
+    <div className="min-h-screen bg-gradient-to-b from-nasa-deep via-black to-black text-white">
       <div className="max-w-7xl mx-auto px-6 py-8">
         <header className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
-            🧬 Astrobiology Lab Simulation
-          </h1>
-          <p className="text-xl text-gray-300">
-            Real-time biological growth simulation across different planetary environments
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="p-3 rounded-xl bg-gradient-to-br from-nasa-blue/30 to-nasa-red/20 ring-1 ring-nasa-blue/40 shadow-lg shadow-nasa-blue/10">
+              <FlaskConical className="w-8 h-8 text-nasa-red" />
+            </div>
+            <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-nasa-blue via-white to-nasa-red bg-clip-text text-transparent">
+              Astrobiology Lab Simulation
+            </h1>
+            <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-400/20 to-sky-400/10 ring-1 ring-emerald-400/40 shadow-lg shadow-emerald-400/10">
+              <Leaf className="w-8 h-8 text-emerald-300" />
+            </div>
+          </div>
+          <p className="text-base sm:text-lg text-gray-300 max-w-3xl mx-auto leading-relaxed">
+            Real-time controlled-environment biology simulator modeling growth physiology, resource dynamics, greenhouse engineering and multi-world adaptation for advanced space life support research.
           </p>
+          {labStats && (
+            <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+              <div className="bg-white/5 backdrop-blur-sm rounded-lg px-4 py-3 ring-1 ring-white/10 flex flex-col gap-1">
+                <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-gray-400"><Activity className="w-3.5 h-3.5"/>Active</div>
+                <div className="text-xl font-semibold">{labStats.active}</div>
+              </div>
+              <div className="bg-white/5 backdrop-blur-sm rounded-lg px-4 py-3 ring-1 ring-white/10 flex flex-col gap-1">
+                <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-gray-400"><BarChart3 className="w-3.5 h-3.5"/>Avg Viability</div>
+                <div className="text-xl font-semibold text-emerald-300">{(labStats.avgViability*100).toFixed(1)}%</div>
+              </div>
+              <div className="bg-white/5 backdrop-blur-sm rounded-lg px-4 py-3 ring-1 ring-white/10 flex flex-col gap-1">
+                <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-gray-400"><Activity className="w-3.5 h-3.5"/>Avg Stress</div>
+                <div className="text-xl font-semibold text-amber-300">{(labStats.avgStress*100).toFixed(1)}%</div>
+              </div>
+              <div className="bg-white/5 backdrop-blur-sm rounded-lg px-4 py-3 ring-1 ring-white/10 flex flex-col gap-1">
+                <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-gray-400"><Sun className="w-3.5 h-3.5"/>Total O₂</div>
+                <div className="text-xl font-semibold text-sky-300">{labStats.totalO2.toFixed(0)} mg</div>
+              </div>
+              <div className="bg-white/5 backdrop-blur-sm rounded-lg px-4 py-3 ring-1 ring-white/10 flex flex-col gap-1">
+                <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-gray-400"><Droplet className="w-3.5 h-3.5"/>Biomass</div>
+                <div className="text-xl font-semibold text-emerald-400">{labStats.totalBiomass.toFixed(1)} g</div>
+              </div>
+            </div>
+          )}
           <div className="mt-4 flex flex-wrap justify-center gap-4 text-sm">
             <label className="flex items-center gap-2 bg-white/5 px-3 py-1 rounded-full border border-white/10 cursor-pointer">
               <input type="checkbox" checked={advancedMode} onChange={() => setAdvancedMode(v => !v)} /> Advanced Mode
@@ -584,14 +729,17 @@ const BiologyLab: React.FC = () => {
             <label className="flex items-center gap-2 bg-white/5 px-3 py-1 rounded-full border border-white/10 cursor-pointer">
               <input type="checkbox" checked={autoEvolve} onChange={() => setAutoEvolve(v => !v)} /> Auto-Evolution
             </label>
+            <button onClick={()=>setShowAnalytics(s=>!s)} className="flex items-center gap-2 bg-white/5 px-3 py-1 rounded-full border border-white/10 text-xs hover:bg-white/10 transition">
+              <Settings2 className="w-4 h-4"/> {showAnalytics? 'Hide':'Show'} Analytics
+            </button>
           </div>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Organism Selection */}
-          <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-            <h3 className="text-xl font-bold mb-4 flex items-center">
-              🦠 Select Organism
+          <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md rounded-xl p-6 border border-white/15 shadow-inner shadow-black/40">
+            <h3 className="text-xl font-semibold mb-4 flex items-center gap-2 text-nasa-blue">
+              <Leaf className="w-5 h-5 text-emerald-300"/> Organisms
             </h3>
             <div className="space-y-3">
               {organisms.map(organism => (
@@ -632,9 +780,9 @@ const BiologyLab: React.FC = () => {
           </div>
 
           {/* Planet Selection */}
-          <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-            <h3 className="text-xl font-bold mb-4 flex items-center">
-              🪐 Select Environment
+          <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md rounded-xl p-6 border border-white/15 shadow-inner shadow-black/40">
+            <h3 className="text-xl font-semibold mb-4 flex items-center gap-2 text-nasa-blue">
+              <Sun className="w-5 h-5 text-amber-300"/> Environments
             </h3>
             <div className="space-y-3">
               {planets.map(planet => (
@@ -676,9 +824,9 @@ const BiologyLab: React.FC = () => {
           </div>
 
           {/* Experiment Controls */}
-          <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-            <h3 className="text-xl font-bold mb-4 flex items-center">
-              ⚗️ Experiment Controls
+          <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md rounded-xl p-6 border border-white/15 shadow-inner shadow-black/40">
+            <h3 className="text-xl font-semibold mb-4 flex items-center gap-2 text-nasa-blue">
+              <FlaskConical className="w-5 h-5 text-nasa-red"/> Experiment Controls
             </h3>
             
             <button
@@ -730,6 +878,47 @@ const BiologyLab: React.FC = () => {
                   </div>
                 </div>
                 <button onClick={() => setGlobalEnvAdjust({ temp: 0, radiation: 0, pressure: 1, oxygen: 1 })} className="w-full mt-2 text-xs bg-gray-700 hover:bg-gray-600 rounded py-1">Reset Environment Adjustments</button>
+                <div className="mt-5 border-t border-white/10 pt-4 space-y-3">
+                  <h4 className="text-sm font-semibold text-green-300">Greenhouse Systems</h4>
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <label className="block mb-1">Photoperiod (h)</label>
+                      <input type="range" min={4} max={24} step={1} value={greenhouse.photoperiodHours} onChange={e => setGreenhouse(g => ({ ...g, photoperiodHours: Number(e.target.value) }))} />
+                      <div className="text-gray-400">{greenhouse.photoperiodHours}h</div>
+                    </div>
+                    <div>
+                      <label className="block mb-1">Light Intensity</label>
+                      <input type="range" min={0.1} max={1} step={0.05} value={greenhouse.lightIntensity} onChange={e => setGreenhouse(g => ({ ...g, lightIntensity: Number(e.target.value) }))} />
+                      <div className="text-gray-400">{(greenhouse.lightIntensity*100).toFixed(0)}%</div>
+                    </div>
+                    <div>
+                      <label className="block mb-1">Irrigation Interval (h)</label>
+                      <input type="range" min={4} max={48} step={1} value={greenhouse.irrigationInterval} onChange={e => setGreenhouse(g => ({ ...g, irrigationInterval: Number(e.target.value) }))} />
+                      <div className="text-gray-400">{greenhouse.irrigationInterval}h</div>
+                    </div>
+                    <div>
+                      <label className="block mb-1">Irrigation Rate</label>
+                      <input type="range" min={0.05} max={0.8} step={0.05} value={greenhouse.irrigationRate} onChange={e => setGreenhouse(g => ({ ...g, irrigationRate: Number(e.target.value) }))} />
+                      <div className="text-gray-400">{(greenhouse.irrigationRate*100).toFixed(0)}%</div>
+                    </div>
+                    <div>
+                      <label className="block mb-1">Nutrient Interval (h)</label>
+                      <input type="range" min={12} max={120} step={4} value={greenhouse.nutrientInterval} onChange={e => setGreenhouse(g => ({ ...g, nutrientInterval: Number(e.target.value) }))} />
+                      <div className="text-gray-400">{greenhouse.nutrientInterval}h</div>
+                    </div>
+                    <div>
+                      <label className="block mb-1">Nutrient Dosing</label>
+                      <input type="range" min={0.05} max={0.7} step={0.05} value={greenhouse.nutrientDosing} onChange={e => setGreenhouse(g => ({ ...g, nutrientDosing: Number(e.target.value) }))} />
+                      <div className="text-gray-400">{(greenhouse.nutrientDosing*100).toFixed(0)}%</div>
+                    </div>
+                    <div className="col-span-2">
+                      <label className="block mb-1">CO₂ Enrichment ×</label>
+                      <input type="range" min={0.5} max={2} step={0.1} value={greenhouse.co2Enrichment} onChange={e => setGreenhouse(g => ({ ...g, co2Enrichment: Number(e.target.value) }))} />
+                      <div className="text-gray-400">{greenhouse.co2Enrichment.toFixed(1)}x</div>
+                    </div>
+                  </div>
+                  <button onClick={() => setGreenhouse({ photoperiodHours: 16, lightIntensity: 0.85, irrigationRate: 0.35, irrigationInterval: 12, nutrientDosing: 0.25, nutrientInterval: 48, co2Enrichment: 1.0 })} className="w-full mt-2 text-xs bg-gray-700 hover:bg-gray-600 rounded py-1">Reset Greenhouse</button>
+                </div>
               </div>
 
               <button
@@ -765,7 +954,14 @@ const BiologyLab: React.FC = () => {
                           viabilityScore,
                           mutationCount: 0,
                           generation: 0,
-                          history: []
+                          history: [],
+                          water: 1,
+                          nutrients: 1,
+                          lightExposure: 0,
+                          biomass: 0,
+                          o2Output: 0,
+                          co2Uptake: 0,
+                          rootDepth: 0
                         };
                         setExperiments(prev => [...prev, newExperiment]);
                         setIsRunning(true);
@@ -789,15 +985,15 @@ const BiologyLab: React.FC = () => {
         </div>
 
         {/* 3D Lab Visualization */}
-        <div className="mt-8 bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-          <h3 className="text-xl font-bold mb-2">3D Lab Visualization</h3>
+        <div className="mt-8 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md rounded-xl p-6 border border-white/15 ring-1 ring-white/10">
+          <h3 className="text-xl font-semibold mb-2 flex items-center gap-2"><Activity className="w-5 h-5 text-sky-300"/>3D Lab Visualization</h3>
           <p className="text-xs text-gray-400 mb-3">Drag to orbit • Scroll to zoom • Auto-demo spawns if none started</p>
           <div ref={labRef} className="w-full" />
         </div>
 
         {/* Active Experiments */}
         {experiments.length > 0 && (
-          <div className="mt-8 bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
+          <div className="mt-8 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md rounded-xl p-6 border border-white/15">
             <h3 className="text-xl font-bold mb-4">Active Experiments ({experiments.length})</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {experiments.map((exp, index) => (
@@ -837,12 +1033,33 @@ const BiologyLab: React.FC = () => {
                       </div>
                     </div>
 
+                    <div className="grid grid-cols-2 gap-2 text-[11px] mt-2">
+                      <div>
+                        <div className="flex justify-between"><span>Water</span><span>{(exp.water*100).toFixed(0)}%</span></div>
+                        <div className="w-full bg-gray-700 rounded-full h-1.5 mt-0.5"><div className={`h-1.5 rounded-full ${exp.water>0.5?'bg-blue-400':exp.water>0.25?'bg-yellow-400':'bg-red-500'}`} style={{width:`${exp.water*100}%`}}/></div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between"><span>Nutrients</span><span>{(exp.nutrients*100).toFixed(0)}%</span></div>
+                        <div className="w-full bg-gray-700 rounded-full h-1.5 mt-0.5"><div className={`h-1.5 rounded-full ${exp.nutrients>0.5?'bg-emerald-400':exp.nutrients>0.25?'bg-yellow-400':'bg-red-500'}`} style={{width:`${exp.nutrients*100}%`}}/></div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between"><span>Light</span><span>{(exp.lightExposure*100).toFixed(0)}%</span></div>
+                        <div className="w-full bg-gray-700 rounded-full h-1.5 mt-0.5"><div className="h-1.5 rounded-full bg-orange-400" style={{width:`${exp.lightExposure*100}%`}}/></div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between"><span>Root Depth</span><span>{(exp.rootDepth*100).toFixed(0)}%</span></div>
+                        <div className="w-full bg-gray-700 rounded-full h-1.5 mt-0.5"><div className="h-1.5 rounded-full bg-amber-600" style={{width:`${exp.rootDepth*100}%`}}/></div>
+                      </div>
+                    </div>
+
                     <div className="text-sm space-y-1">
                       <div>Stage: <span className="text-blue-400">{exp.adaptationStage}</span>{exp.anomaly && <span className="ml-2 text-red-400 text-xs">ANOMALY</span>}</div>
                       <div>Time: <span className="text-gray-400">{exp.timeElapsed.toFixed(0)} days</span></div>
                       <div>Stress: <span className="text-yellow-400">{(exp.stressIndex * 100).toFixed(1)}%</span></div>
                       <div>Viability: <span className="text-green-300">{(exp.viabilityScore * 100).toFixed(1)}%</span></div>
                       <div>Generation: <span className="text-purple-300">{exp.generation}</span> | Mut: <span className="text-gray-300">{exp.mutationCount}</span></div>
+                      <div>Biomass: <span className="text-emerald-300">{exp.biomass.toFixed(1)} g</span></div>
+                      <div className="text-[11px] text-gray-400">O₂ Output: {(exp.o2Output).toFixed(0)} mg | CO₂ Uptake: {(exp.co2Uptake).toFixed(0)} mg</div>
                     </div>
                     {exp.history.length > 5 && (
                       <div className="mt-2 h-8 w-full bg-gray-800 rounded overflow-hidden relative">
@@ -862,6 +1079,35 @@ const BiologyLab: React.FC = () => {
                 </div>
               ))}
             </div>
+            {showAnalytics && topStress.length>0 && (
+              <div className="mt-10 border-t border-white/10 pt-6">
+                <h4 className="text-lg font-semibold mb-4 flex items-center gap-2 text-nasa-blue"><BarChart3 className="w-5 h-5"/>Stress Analytics</h4>
+                <div className="grid sm:grid-cols-3 gap-4">
+                  {topStress.map(exp => (
+                    <div key={exp.organism.id+exp.planet.name} className="bg-black/30 rounded-lg p-4 border border-white/10 flex flex-col gap-2">
+                      <div className="text-sm font-semibold line-clamp-1">{exp.organism.name}</div>
+                      <div className="text-xs text-gray-400">{exp.planet.name}</div>
+                      <div className="h-10 w-full bg-gray-800/70 rounded relative overflow-hidden">
+                        <svg className="absolute inset-0 w-full h-full">
+                          {(() => {
+                            const pts = exp.history.slice(-80);
+                            if(!pts.length) return null;
+                            const path = pts.map((p,i)=>`${(i/(pts.length-1))*100},${(1-p.stress)*100}`).join(' ');
+                            return <polyline points={path} stroke="#fbbf24" strokeWidth={1} fill="none" />;
+                          })()}
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center text-[10px] text-gray-500">Stress Trend</div>
+                      </div>
+                      <div className="text-xs flex flex-wrap gap-x-2 gap-y-1">
+                        <span className="text-amber-300">Stress {(exp.stressIndex*100).toFixed(1)}%</span>
+                        <span className="text-emerald-300">Viab {(exp.viabilityScore*100).toFixed(0)}%</span>
+                        <span className="text-sky-300">Water {(exp.water*100).toFixed(0)}%</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
